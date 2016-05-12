@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.carbondata.core.carbon.metadata.datatype.DataType;
@@ -40,6 +41,7 @@ public class ColumnDictionaryInfo extends AbstractColumnDictionaryInfo {
    */
   private AtomicReference<List<Integer>> sortOrderReference =
       new AtomicReference<List<Integer>>(new ArrayList<Integer>());
+  private int searchStartIndex;
 
   /**
    * inverted index to retrieve the member
@@ -172,6 +174,43 @@ public class ColumnDictionaryInfo extends AbstractColumnDictionaryInfo {
     return 0;
   }
 
+  /**
+   * This method will apply binary search logic to find the surrogate key for the
+   * given value
+   *
+   * @param key to be searched
+   * @return
+   */
+  public int getIncrementalSurrogateKeyFromDictionary(byte[] key,
+      Stack<Integer> startIndexContainer) {
+    String filterKey = new String(key);
+    int low = startIndexContainer.pop();
+    List<Integer> sortedSurrogates = sortOrderReference.get();
+    int high = sortedSurrogates.size() - 1;
+    while (low <= high) {
+      int mid = (low + high) >>> 1;
+      int surrogateKey = sortedSurrogates.get(mid);
+      byte[] dictionaryValue = getDictionaryBytesFromSurrogate(surrogateKey);
+      int cmp = -1;
+      if (this.getDataType() != DataType.STRING) {
+        cmp = compareFilterKeyWithDictionaryKey(new String(dictionaryValue), filterKey,
+            this.getDataType());
+
+      } else {
+        cmp = ByteUtil.UnsafeComparer.INSTANCE.compareTo(dictionaryValue, key);
+      }
+      if (cmp < 0) {
+        low = mid + 1;
+      } else if (cmp > 0) {
+        high = mid - 1;
+      } else {
+        startIndexContainer.push(mid);
+        return surrogateKey; // key found
+      }
+    }
+    return 0;
+  }
+
   private int compareFilterKeyWithDictionaryKey(String dictionaryVal, String memberVal,
       DataType dataType) {
     try {
@@ -217,4 +256,5 @@ public class ColumnDictionaryInfo extends AbstractColumnDictionaryInfo {
   public DataType getDataType() {
     return dataType;
   }
+
 }

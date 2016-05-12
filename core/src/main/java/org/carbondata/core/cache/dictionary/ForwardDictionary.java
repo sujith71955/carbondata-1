@@ -19,6 +19,11 @@
 
 package org.carbondata.core.cache.dictionary;
 
+import java.nio.charset.Charset;
+import java.util.Stack;
+
+import org.carbondata.core.constants.CarbonCommonConstants;
+
 /**
  * This class will be used for dictionary key and value look up
  */
@@ -124,4 +129,13 @@ public class ForwardDictionary implements Dictionary {
     columnDictionaryInfo = null;
   }
 
+  /**
+   * This method will read the surrogates based on search range.
+   */
+  public Integer getSurrogateKeyByIncrementalSearch(String value,
+      Stack<Integer> startIndexContainer) {
+    byte[] keyData = value.getBytes(Charset.forName(CarbonCommonConstants.DEFAULT_CHARSET));
+    return columnDictionaryInfo
+        .getIncrementalSurrogateKeyFromDictionary(keyData, startIndexContainer);
+  }
 }

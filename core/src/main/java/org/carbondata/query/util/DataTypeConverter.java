@@ -21,6 +21,7 @@ package org.carbondata.query.util;
 
 //import java.sql.Timestamp;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -86,7 +87,7 @@ public final class DataTypeConverter {
             return dateToStr.getTime() * 1000;
           } catch (ParseException e) {
             LOGGER.error("Cannot convert" + TIMESTAMP.toString() + " to Time/Long type value" + e
-                    .getMessage());
+                .getMessage());
             return null;
           }
         case DECIMAL:
@@ -155,7 +156,7 @@ public final class DataTypeConverter {
             return dateToStr.getTime() * 1000;
           } catch (ParseException e) {
             LOGGER.error("Cannot convert" + TIMESTAMP.toString() + " to Time/Long type value" + e
-                    .getMessage());
+                .getMessage());
             return null;
           }
         case DECIMAL:
@@ -216,4 +217,36 @@ public final class DataTypeConverter {
 
   }
 
+  public static int compareFilterMembersBasedOnActualDataType(String filterMember1,
+      String filterMember2, org.carbondata.query.expression.DataType dataType) {
+    try {
+      switch (dataType) {
+        case IntegerType:
+        case LongType:
+        case DoubleType:
+
+          Double d1 = Double.parseDouble(filterMember1);
+          Double d2 = Double.parseDouble(filterMember2);
+          return d1.compareTo(d2);
+        case DecimalType:
+          java.math.BigDecimal val1 = new BigDecimal(filterMember1);
+          java.math.BigDecimal val2 = new BigDecimal(filterMember2);
+          return val1.compareTo(val2);
+        case TimestampType:
+          SimpleDateFormat parser = new SimpleDateFormat(CarbonProperties.getInstance()
+              .getProperty(CarbonCommonConstants.CARBON_TIMESTAMP_FORMAT,
+                  CarbonCommonConstants.CARBON_TIMESTAMP_DEFAULT_FORMAT));
+          Date date1 = null;
+          Date date2 = null;
+          date1 = parser.parse(filterMember1);
+          date2 = parser.parse(filterMember2);
+          return date1.compareTo(date2);
+        case StringType:
+        default:
+          return filterMember1.compareTo(filterMember2);
+      }
+    } catch (Exception e) {
+      return -1;
+    }
+  }
 }
