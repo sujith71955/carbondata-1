@@ -41,7 +41,6 @@ public class ColumnDictionaryInfo extends AbstractColumnDictionaryInfo {
    */
   private AtomicReference<List<Integer>> sortOrderReference =
       new AtomicReference<List<Integer>>(new ArrayList<Integer>());
-  private int searchStartIndex;
 
   /**
    * inverted index to retrieve the member
@@ -178,37 +177,45 @@ public class ColumnDictionaryInfo extends AbstractColumnDictionaryInfo {
    * This method will apply binary search logic to find the surrogate key for the
    * given value
    *
-   * @param key to be searched
+   * @param byteValuesOfFilterMembers to be searched
+   * @param surrogates
    * @return
    */
-  public int getIncrementalSurrogateKeyFromDictionary(byte[] key,
-      Stack<Integer> startIndexContainer) {
-    String filterKey = new String(key);
-    int low = startIndexContainer.pop();
-    List<Integer> sortedSurrogates = sortOrderReference.get();
-    int high = sortedSurrogates.size() - 1;
-    while (low <= high) {
-      int mid = (low + high) >>> 1;
-      int surrogateKey = sortedSurrogates.get(mid);
-      byte[] dictionaryValue = getDictionaryBytesFromSurrogate(surrogateKey);
-      int cmp = -1;
-      if (this.getDataType() != DataType.STRING) {
-        cmp = compareFilterKeyWithDictionaryKey(new String(dictionaryValue), filterKey,
-            this.getDataType());
+  public void getIncrementalSurrogateKeyFromDictionary(List<byte[]> byteValuesOfFilterMembers,
+      Stack<Integer> startIndexContainer, List<Integer> surrogates) {
+    for (byte[] byteValueOfFilterMember : byteValuesOfFilterMembers) {
+      String filterKey = new String(byteValueOfFilterMember);
+      int low = startIndexContainer.pop();
+      List<Integer> sortedSurrogates = sortOrderReference.get();
+      int high = sortedSurrogates.size() - 1;
+      while (low <= high) {
+        int mid = (low + high) >>> 1;
+        int surrogateKey = sortedSurrogates.get(mid);
+        byte[] dictionaryValue = getDictionaryBytesFromSurrogate(surrogateKey);
+        int cmp = -1;
+        if (this.getDataType() != DataType.STRING) {
+          cmp = compareFilterKeyWithDictionaryKey(new String(dictionaryValue), filterKey,
+              this.getDataType());
 
-      } else {
-        cmp = ByteUtil.UnsafeComparer.INSTANCE.compareTo(dictionaryValue, key);
-      }
-      if (cmp < 0) {
-        low = mid + 1;
-      } else if (cmp > 0) {
-        high = mid - 1;
-      } else {
-        startIndexContainer.push(mid);
-        return surrogateKey; // key found
+        } else {
+          cmp =
+              ByteUtil.UnsafeComparer.INSTANCE.compareTo(dictionaryValue, byteValueOfFilterMember);
+        }
+        if (cmp < 0) {
+          low = mid + 1;
+        } else if (cmp > 0) {
+          high = mid - 1;
+        } else {
+          startIndexContainer.push(mid);
+          surrogates.add(surrogateKey);
+          break;
+        }
       }
     }
-    return 0;
+    //Default value has to be added
+    if (surrogates.isEmpty()) {
+      surrogates.add(0);
+    }
   }
 
   private int compareFilterKeyWithDictionaryKey(String dictionaryVal, String memberVal,

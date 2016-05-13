@@ -248,15 +248,9 @@ public final class FilterUtil {
     List<Integer> surrogates = new ArrayList<Integer>(20);
     Stack<Integer> startIndexContainer = new Stack<Integer>();
     startIndexContainer.push(0);
-    for (String resultVal : evaluateResultList) {
-      // Reading the dictionary value from cache.
-      Integer dictionaryVal =
-          getDictionaryValue(resultVal, tableIdentifier, columnExpression.getDimension(),
-              startIndexContainer);
-      if (null != dictionaryVal) {
-        surrogates.add(dictionaryVal);
-      }
-    }
+    // Reading the dictionary value from cache.
+    getDictionaryValue(evaluateResultList, tableIdentifier, columnExpression.getDimension(),
+        startIndexContainer, surrogates);
     Collections.sort(surrogates);
     DimColumnFilterInfo columnFilterInfo = null;
     if (surrogates.size() > 0) {
@@ -271,20 +265,21 @@ public final class FilterUtil {
    * This API will get the Dictionary value for the respective filter member
    * string.
    *
-   * @param value           filter value
+   * @param evaluateResultList filter value
    * @param tableIdentifier
-   * @param dim             , column expression dimension type.
+   * @param dim                , column expression dimension type.
+   * @param surrogates
    * @return the dictionary value.
    * @throws QueryExecutionException
    */
-  private static Integer getDictionaryValue(String value, AbsoluteTableIdentifier tableIdentifier,
-      CarbonDimension dim, Stack<Integer> startIndexContainer) throws QueryExecutionException {
+  private static void getDictionaryValue(List<String> evaluateResultList,
+      AbsoluteTableIdentifier tableIdentifier, CarbonDimension dim,
+      Stack<Integer> startIndexContainer, List<Integer> surrogates) throws QueryExecutionException {
     Dictionary forwardDictionary = getForwardDictionaryCache(tableIdentifier, dim);
     if (null != forwardDictionary) {
-      return ((ForwardDictionary) forwardDictionary)
-          .getSurrogateKeyByIncrementalSearch(value, startIndexContainer);
+      ((ForwardDictionary) forwardDictionary)
+          .getSurrogateKeyByIncrementalSearch(evaluateResultList, startIndexContainer, surrogates);
     }
-    return null;
   }
 
   /**
