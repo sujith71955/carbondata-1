@@ -18,15 +18,11 @@
  */
 package org.carbondata.query.filter.resolver.resolverinfo.visitor;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.carbondata.common.logging.LogService;
 import org.carbondata.common.logging.LogServiceFactory;
-import org.carbondata.core.constants.CarbonCommonConstants;
 import org.carbondata.query.carbon.executor.exception.QueryExecutionException;
-import org.carbondata.query.expression.ExpressionResult;
 import org.carbondata.query.expression.exception.FilterUnsupportedException;
 import org.carbondata.query.filter.resolver.metadata.FilterResolverMetadata;
 import org.carbondata.query.filter.resolver.resolverinfo.DimColumnResolvedFilterInfo;
@@ -48,17 +44,9 @@ public class DictionaryColumnVisitor implements ResolvedFilterInfoVisitorIntf {
   public void populateFilterResolvedInfo(DimColumnResolvedFilterInfo visitableObj,
       FilterResolverMetadata metadata) throws QueryExecutionException {
     DimColumnFilterInfo resolvedFilterObject = null;
-    List<String> evaluateResultListFinal = new ArrayList<String>(20);
     try {
-      List<ExpressionResult> evaluateResultList = metadata.getExpression().evaluate(null).getList();
-      Collections.sort(evaluateResultList);
-      for (ExpressionResult result : evaluateResultList) {
-        if (result.getString() == null) {
-          evaluateResultListFinal.add(CarbonCommonConstants.MEMBER_DEFAULT_VAL);
-          continue;
-        }
-        evaluateResultListFinal.add(result.getString());
-      }
+      List<String> evaluateResultListFinal =
+          metadata.getExpression().evaluate(null).getListAsString();
       resolvedFilterObject = FilterUtil
           .getFilterValues(metadata.getTableIdentifier(), metadata.getColumnExpression(),
               evaluateResultListFinal, metadata.isIncludeFilter());

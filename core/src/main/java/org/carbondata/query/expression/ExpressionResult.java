@@ -112,7 +112,7 @@ public class ExpressionResult implements Comparable<ExpressionResult> {
         if (value instanceof Timestamp) {
           return parser.format((Timestamp) value);
         } else {
-          return parser.format(new Timestamp((long) value/1000));
+          return parser.format(new Timestamp((long) value / 1000));
         }
 
       default:
@@ -305,6 +305,19 @@ public class ExpressionResult implements Comparable<ExpressionResult> {
     } else {
       return expressionResults;
     }
+  }
+
+  public List<String> getListAsString() {
+    List<String> evaluateResultListFinal = new ArrayList<String>(20);
+    List<ExpressionResult> evaluateResultList = getList();
+    for (ExpressionResult result : evaluateResultList) {
+      if (result.getString() == null) {
+        evaluateResultListFinal.add(CarbonCommonConstants.MEMBER_DEFAULT_VAL);
+        continue;
+      }
+      evaluateResultListFinal.add(result.getString());
+    }
+    return evaluateResultListFinal;
   }
 
   @Override public int hashCode() {

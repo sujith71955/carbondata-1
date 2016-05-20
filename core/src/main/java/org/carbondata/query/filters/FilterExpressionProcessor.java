@@ -254,7 +254,9 @@ public class FilterExpressionProcessor implements FilterProcessor {
             != DataType.STRUCT) {
           // getting new dim index.
           if (!currentCondExpression.getColumnList().get(0).getCarbonColumn()
-              .hasEncoding(Encoding.DICTIONARY)) {
+              .hasEncoding(Encoding.DICTIONARY) || currentCondExpression.getColumnList()
+              .get(0).getCarbonColumn()
+              .hasEncoding(Encoding.DIRECT_DICTIONARY)) {
             if (FilterUtil.checkIfExpressionContainsColumn(currentCondExpression.getLeft())
                 && FilterUtil.checkIfExpressionContainsColumn(currentCondExpression.getRight())) {
               return new RowLevelFilterResolverImpl(expression, isExpressionResolve, true,

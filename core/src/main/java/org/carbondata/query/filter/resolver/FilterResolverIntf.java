@@ -38,7 +38,7 @@ public interface FilterResolverIntf extends Serializable {
    */
   void resolve(AbsoluteTableIdentifier absoluteTableIdentifier) throws QueryExecutionException;
 
-  /**O
+  /**
    * This API will provide the left column filter expression
    * inorder to resolve the left expression filter.
    *

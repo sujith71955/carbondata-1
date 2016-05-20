@@ -25,11 +25,9 @@ import java.util.List;
 import org.carbondata.common.logging.LogService;
 import org.carbondata.common.logging.LogServiceFactory;
 import org.carbondata.core.carbon.AbsoluteTableIdentifier;
-import org.carbondata.core.constants.CarbonCommonConstants;
 import org.carbondata.core.keygenerator.directdictionary.DirectDictionaryGenerator;
 import org.carbondata.core.keygenerator.directdictionary.DirectDictionaryKeyGeneratorFactory;
 import org.carbondata.query.expression.ColumnExpression;
-import org.carbondata.query.expression.ExpressionResult;
 import org.carbondata.query.expression.exception.FilterUnsupportedException;
 import org.carbondata.query.filter.resolver.metadata.FilterResolverMetadata;
 import org.carbondata.query.filter.resolver.resolverinfo.DimColumnResolvedFilterInfo;
@@ -50,16 +48,9 @@ public class CustomTypeDictionaryVisitor implements ResolvedFilterInfoVisitorInt
   public void populateFilterResolvedInfo(DimColumnResolvedFilterInfo visitableObj,
       FilterResolverMetadata metadata) {
     DimColumnFilterInfo resolvedFilterObject = null;
-    List<String> evaluateResultListFinal = new ArrayList<String>(20);
     try {
-      List<ExpressionResult> evaluateResultList = metadata.getExpression().evaluate(null).getList();
-      for (ExpressionResult result : evaluateResultList) {
-        if (result.getString() == null) {
-          evaluateResultListFinal.add(CarbonCommonConstants.MEMBER_DEFAULT_VAL);
-          continue;
-        }
-        evaluateResultListFinal.add(result.getString());
-      }
+      List<String> evaluateResultListFinal =
+          metadata.getExpression().evaluate(null).getListAsString();
       resolvedFilterObject = getDirectDictionaryValKeyMemberForFilter(metadata.getTableIdentifier(),
           metadata.getColumnExpression(), evaluateResultListFinal, metadata.isIncludeFilter());
       visitableObj.setFilterValues(resolvedFilterObject);
@@ -74,7 +65,7 @@ public class CustomTypeDictionaryVisitor implements ResolvedFilterInfoVisitorInt
       List<String> evaluateResultListFinal, boolean isIncludeFilter) {
     List<Integer> surrogates = new ArrayList<Integer>(20);
     DirectDictionaryGenerator directDictionaryGenerator = DirectDictionaryKeyGeneratorFactory
-        .getDirectDictionaryGenerator(columnExpression.getDataType());
+        .getDirectDictionaryGenerator(columnExpression.getDimension().getDataType());
     // Reading the dictionary value direct
     for (String filterMember : evaluateResultListFinal) {
       surrogates.add(directDictionaryGenerator.generateDirectSurrogateKey(filterMember));
