@@ -39,10 +39,10 @@ import org.carbondata.query.carbon.processor.BlocksChunkHolder;
 import org.carbondata.query.carbonfilterinterface.RowImpl;
 import org.carbondata.query.carbonfilterinterface.RowIntf;
 import org.carbondata.query.complex.querytypes.GenericQueryType;
-import org.carbondata.query.evaluators.DimColumnResolvedFilterInfo;
-import org.carbondata.query.evaluators.MeasureColumnResolvedFilterInfo;
 import org.carbondata.query.expression.Expression;
 import org.carbondata.query.expression.exception.FilterUnsupportedException;
+import org.carbondata.query.filter.resolver.resolverinfo.DimColumnResolvedFilterInfo;
+import org.carbondata.query.filter.resolver.resolverinfo.MeasureColumnResolvedFilterInfo;
 import org.carbondata.query.filters.measurefilter.util.FilterUtil;
 import org.carbondata.query.util.DataTypeConverter;
 

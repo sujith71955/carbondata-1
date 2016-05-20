@@ -112,7 +112,7 @@ public class ExpressionResult {
         if (value instanceof Timestamp) {
           return parser.format((Timestamp) value);
         } else {
-          return parser.format(new Timestamp((long) value));
+          return parser.format(new Timestamp((long) value/1000));
         }
 
       default:

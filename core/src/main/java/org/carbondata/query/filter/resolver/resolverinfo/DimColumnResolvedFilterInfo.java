@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.carbondata.query.evaluators;
+package org.carbondata.query.filter.resolver.resolverinfo;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -29,10 +29,14 @@ import org.carbondata.core.carbon.datastore.IndexKey;
 import org.carbondata.core.carbon.metadata.schema.table.column.CarbonDimension;
 import org.carbondata.core.carbon.metadata.schema.table.column.CarbonMeasure;
 import org.carbondata.core.metadata.CarbonMetadata.Dimension;
+import org.carbondata.query.carbon.executor.exception.QueryExecutionException;
 import org.carbondata.query.complex.querytypes.GenericQueryType;
+import org.carbondata.query.filter.resolver.metadata.FilterResolverMetadata;
+import org.carbondata.query.filter.resolver.resolverinfo.visitable.ResolvedFilterInfoVisitable;
+import org.carbondata.query.filter.resolver.resolverinfo.visitor.ResolvedFilterInfoVisitorIntf;
 import org.carbondata.query.schema.metadata.DimColumnFilterInfo;
 
-public class DimColumnResolvedFilterInfo implements Serializable {
+public class DimColumnResolvedFilterInfo implements Serializable, ResolvedFilterInfoVisitable {
   /**
    *
    */
@@ -211,5 +215,17 @@ public class DimColumnResolvedFilterInfo implements Serializable {
 
   public void setDefaultValue(String defaultValue) {
     this.defaultValue = defaultValue;
+  }
+
+  @Override public void populateFilterInfoBasedOnColumnType(ResolvedFilterInfoVisitorIntf visitor,
+      FilterResolverMetadata metadata) throws QueryExecutionException {
+    if (null != visitor) {
+      visitor.populateFilterResolvedInfo(this, metadata);
+      this.addDimensionResolvedFilterInstance(metadata.getColumnExpression().getDimension(),
+          this.getFilterValues());
+      this.setDimension(metadata.getColumnExpression().getDimension());
+      this.setColumnIndex(metadata.getColumnExpression().getDimension().getOrdinal());
+    }
+
   }
 }
