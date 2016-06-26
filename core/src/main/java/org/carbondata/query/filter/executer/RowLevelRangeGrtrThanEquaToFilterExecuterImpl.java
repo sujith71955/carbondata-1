@@ -25,7 +25,6 @@ import org.carbondata.core.carbon.AbsoluteTableIdentifier;
 import org.carbondata.core.carbon.datastore.block.SegmentProperties;
 import org.carbondata.core.carbon.datastore.chunk.DimensionColumnDataChunk;
 import org.carbondata.core.carbon.datastore.chunk.impl.FixedLengthDimensionDataChunk;
-import org.carbondata.core.carbon.metadata.datatype.DataType;
 import org.carbondata.core.carbon.metadata.encoder.Encoding;
 import org.carbondata.core.util.ByteUtil;
 import org.carbondata.core.util.CarbonUtil;
@@ -77,8 +76,7 @@ public class RowLevelRangeGrtrThanEquaToFilterExecuterImpl extends RowLevelFilte
 
   @Override public BitSet applyFilter(BlocksChunkHolder blockChunkHolder)
       throws FilterUnsupportedException {
-    if (!dimColEvaluatorInfoList.get(0).getDimension().hasEncoding(Encoding.DICTIONARY) && !(
-        dimColEvaluatorInfoList.get(0).getDimension().getDataType() == DataType.STRING)) {
+    if (!dimColEvaluatorInfoList.get(0).getDimension().hasEncoding(Encoding.DICTIONARY)) {
       return super.applyFilter(blockChunkHolder);
     }
     int blockIndex = segmentProperties.getDimensionOrdinalToBlockMapping()
@@ -125,9 +123,21 @@ public class RowLevelRangeGrtrThanEquaToFilterExecuterImpl extends RowLevelFilte
               filterValues[i]);
       if (start < 0) {
         start = -(start + 1);
+        if (start == numerOfRows) {
+          start = start - 1;
+        }
+        // Method will compare the tentative index value after binary search, this tentative
+        // index needs to be compared by the filter member if its >= filter then from that
+        // index the bitset will be considered for filtering process.
+        if (ByteUtil
+            .compare(filterValues[i], dimensionColumnDataChunk.getChunkData(columnIndex[start]))
+            >= 0) {
+          start = start + 1;
+        }
       }
       last = start;
       for (int j = start; j < numerOfRows; j++) {
+
         bitSet.set(columnIndex[j]);
         last++;
       }
@@ -163,9 +173,20 @@ public class RowLevelRangeGrtrThanEquaToFilterExecuterImpl extends RowLevelFilte
             filterValues[k]);
         if (start < 0) {
           start = -(start + 1);
+          if (start == numerOfRows) {
+            start = start - 1;
+          }
+          // Method will compare the tentative index value after binary search, this tentative
+          // index needs to be compared by the filter member if its >= filter then from that
+          // index the bitset will be considered for filtering process.
+          if (ByteUtil.compare(filterValues[k],dimensionColumnDataChunk.getChunkData(start))
+              >= 0) {
+            start = start + 1;
+          }
         }
+
         last = start;
-        for (int j = start; j <= numerOfRows; j++) {
+        for (int j = start; j < numerOfRows; j++) {
           bitSet.set(j);
           last++;
         }

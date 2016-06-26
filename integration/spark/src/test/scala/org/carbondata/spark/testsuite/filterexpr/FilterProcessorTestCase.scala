@@ -40,7 +40,7 @@ class FilterProcessorTestCase extends QueryTest with BeforeAndAfterAll {
     sql("drop table if exists filtertestTables")
     sql("drop table if exists filtertestTablesWithDecimal")
     sql("drop table if exists filtertestTablesWithNull")
-    sql("drop table if exists filterWithTimeStamp")
+    sql("drop table if exists filterTimestampDataType")
     sql("drop table if exists noloadtable")
     sql("CREATE TABLE filtertestTables (ID int, date Timestamp, country String, " +
       "name String, phonetype String, serialname String, salary int) " +
@@ -53,25 +53,18 @@ class FilterProcessorTestCase extends QueryTest with BeforeAndAfterAll {
      CarbonProperties.getInstance()
         .addProperty(CarbonCommonConstants.CARBON_TIMESTAMP_FORMAT, "MM-dd-yyyy HH:mm:ss")
         
-    sql("CREATE TABLE filterWithTimeStamp (ID int, date Timestamp, country String, " +
+     sql("CREATE TABLE filterTimestampDataType (ID int, date Timestamp, country String, " +
       "name String, phonetype String, serialname String, salary int) " +
         "STORED BY 'org.apache.carbondata.format'"
     )
+       CarbonProperties.getInstance()
+        .addProperty(CarbonCommonConstants.CARBON_TIMESTAMP_FORMAT, "MM-dd-yyyy HH:mm:ss")
     sql(
       s"LOAD DATA LOCAL INPATH './src/test/resources/data2_DiffTimeFormat.csv' INTO TABLE " +
-        s"filterWithTimeStamp " +
+        s"filterTimestampDataType " +
         s"OPTIONS('DELIMITER'= ',', " +
         s"'FILEHEADER'= '')"
     )
-    
-     test("Time stamp filter with diff time format for load ") {
-    checkAnswer(
-      sql("select date  from filterWithTimeStamp where date > '2014-07-10 00:00:00'"),
-      Seq(Row(Timestamp.valueOf("2014-07-20 00:00:00.0")),
-        Row(Timestamp.valueOf("2014-07-25 00:00:00.0"))
-      )
-    )
-  }
     CarbonProperties.getInstance()
       .addProperty(CarbonCommonConstants.CARBON_TIMESTAMP_FORMAT, "yyyy/MM/dd")
     sql(
@@ -175,11 +168,43 @@ class FilterProcessorTestCase extends QueryTest with BeforeAndAfterAll {
       Seq(Row(1, "china"))
     )
   }
-
+  
   test("filter query over table having no data") {
     checkAnswer(
       sql("select * from noloadtable " + "where country='china' and name='aaa1'"),
       Seq()
+    )
+  }
+
+
+    
+     test("Time stamp filter with diff time format for load greater") {
+    checkAnswer(
+      sql("select date  from filterTimestampDataType where date > '2014-07-10 00:00:00'"),
+      Seq(Row(Timestamp.valueOf("2014-07-20 00:00:00.0")),
+        Row(Timestamp.valueOf("2014-07-25 00:00:00.0"))
+      )
+    )
+  }
+    test("Time stamp filter with diff time format for load less") {
+    checkAnswer(
+      sql("select date  from filterTimestampDataType where date < '2014-07-20 00:00:00'"),
+      Seq(Row(Timestamp.valueOf("2014-07-10 00:00:00.0"))
+      )
+    )
+  }
+   test("Time stamp filter with diff time format for load less than equal") {
+    checkAnswer(
+      sql("select date  from filterTimestampDataType where date <= '2014-07-20 00:00:00'"),
+      Seq(Row(Timestamp.valueOf("2014-07-10 00:00:00.0")),Row(Timestamp.valueOf("2014-07-20 00:00:00.0"))
+      )
+    )
+  }
+      test("Time stamp filter with diff time format for load greater than equal") {
+    checkAnswer(
+      sql("select date  from filterTimestampDataType where date >= '2014-07-20 00:00:00'"),
+      Seq(Row(Timestamp.valueOf("2014-07-20 00:00:00.0")),Row(Timestamp.valueOf("2014-07-25 00:00:00.0"))
+      )
     )
   }
 

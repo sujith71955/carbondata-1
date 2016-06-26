@@ -888,7 +888,7 @@ public final class CarbonUtil {
         return currentIndex;
       }
     }
-    return -(low);
+    return -(low + 1);
   }
 
   /**

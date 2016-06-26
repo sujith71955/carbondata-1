@@ -127,6 +127,17 @@ public class RowLevelRangeLessThanFiterExecuterImpl extends RowLevelFilterExecut
       start = CarbonUtil.nextLesserValueToTarget(start, dimensionColumnDataChunk, filterValues[i]);
       if (start < 0) {
         start = -(start + 1);
+        if (start == numerOfRows) {
+          start = start - 1;
+        }
+        // Method will compare the tentative index value after binary search, this tentative
+        // index needs to be compared by the filter member if its < filter then from that
+        // index the bitset will be considered for filtering process.
+        if (ByteUtil
+            .compare(filterValues[i], dimensionColumnDataChunk.getChunkData(columnIndex[start]))
+            < 0) {
+          start = start - 1;
+        }
       }
       last = start;
       for (int j = start; j >= 0; j--) {
@@ -167,10 +178,18 @@ public class RowLevelRangeLessThanFiterExecuterImpl extends RowLevelFilterExecut
             (FixedLengthDimensionDataChunk) dimensionColumnDataChunk, filterValues[k]);
         if (start < 0) {
           start = -(start + 1);
+          if (start == numerOfRows) {
+            start = start - 1;
+          }
+          // Method will compare the tentative index value after binary search, this tentative
+          // index needs to be compared by the filter member if its < filter then from that
+          // index the bitset will be considered for filtering process.
+          if (ByteUtil.compare(filterValues[k], dimensionColumnDataChunk.getChunkData(start)) < 0) {
+            start = start - 1;
+          }
         }
-        bitSet.set(start);
         last = start;
-        for (int j = start; j > 0; j--) {
+        for (int j = start; j >= 0; j--) {
           bitSet.set(j);
           last--;
         }

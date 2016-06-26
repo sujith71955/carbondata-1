@@ -129,7 +129,19 @@ public class RowLevelRangeGrtThanFiterExecuterImpl extends RowLevelFilterExecute
       // from the next element which is greater than filter member.
       if (start < 0) {
         start = -(start + 1);
+        if (start == numerOfRows) {
+          start = start - 1;
+        }
+        // Method will compare the tentative index value after binary search, this tentative
+        // index needs to be compared by the filter member if its > filter then from that
+        // index the bitset will be considered for filtering process.
+        if (ByteUtil
+            .compare(filterValues[i], dimensionColumnDataChunk.getChunkData(columnIndex[start]))
+            > 0) {
+          start = start + 1;
+        }
       }
+
       last = start;
       for (int j = start; j < numerOfRows; j++) {
         bitSet.set(columnIndex[j]);
@@ -170,9 +182,18 @@ public class RowLevelRangeGrtThanFiterExecuterImpl extends RowLevelFilterExecute
             (FixedLengthDimensionDataChunk) dimensionColumnDataChunk, filterValues[k], numerOfRows);
         if (start < 0) {
           start = -(start + 1);
+          if (start == numerOfRows) {
+            start = start - 1;
+          }
+          // Method will compare the tentative index value after binary search, this tentative
+          // index needs to be compared by the filter member if its > filter then from that
+          // index the bitset will be considered for filtering process.
+          if (ByteUtil.compare(filterValues[k], dimensionColumnDataChunk.getChunkData(start)) > 0) {
+            start = start + 1;
+          }
         }
         last = start;
-        for (int j = start; j <= numerOfRows; j++) {
+        for (int j = start; j < numerOfRows; j++) {
           bitSet.set(j);
           last++;
         }
