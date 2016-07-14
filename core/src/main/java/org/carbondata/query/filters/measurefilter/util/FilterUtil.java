@@ -234,6 +234,24 @@ public final class FilterUtil {
     }
     return false;
   }
+  /**
+   * This method will check if a given expression contains a column expression
+   * recursively.
+   *
+   * @return
+   */
+  public static boolean checkIfRightExpressionRequireEvaluation(Expression expression) {
+    if (expression.getFilterExpressionType() == ExpressionType.UNKNOWN
+        || !(expression instanceof LiteralExpression)) {
+      return true;
+    }
+    for (Expression child : expression.getChildren()) {
+      if (checkIfLeftExpressionRequireEvaluation(child)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /**
    * method will get the masked keys based on the keys generated from surrogates.
@@ -1307,7 +1325,7 @@ public final class FilterUtil {
    */
   public static void logError(Throwable e, boolean invalidRowsPresent) {
     if (!invalidRowsPresent) {
-      invalidRowsPresent = true;
+      invalidRowsPresent=true;
       LOGGER.error(e, CarbonCommonConstants.FILTER_INVALID_MEMBER + e.getMessage());
     }
   }
